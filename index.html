@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video Models are Excellent Motion Models</title>
+
+<meta name="description" content="Video foundation models generate more natural and semantically meaningful 3D human motion than dedicated motion models, especially for complex and compound actions. Project page with results, the comparison framework and evaluation.">
+<meta name="author" content="Kian Izadpanah, Ali Mahdavi Amiri, Daniel Cohen-Or, Yiorgos Chrysanthou, Andreas Aristidou">
+<meta name="keywords" content="video foundation models, 3D human motion generation, text-to-motion, video-to-motion, motion priors, motion in-betweening, skeletal control, Kimodo, MotionGPT3, CondMDI, GVHMR">
+<link rel="canonical" href="https://video-beats-motion.github.io/">
+
+<!-- Google Scholar / Zotero -->
+<meta name="citation_title" content="Video Models are Excellent Motion Models">
+<meta name="citation_author" content="Izadpanah, Kian">
+<meta name="citation_author" content="Mahdavi Amiri, Ali">
+<meta name="citation_author" content="Cohen-Or, Daniel">
+<meta name="citation_author" content="Chrysanthou, Yiorgos">
+<meta name="citation_author" content="Aristidou, Andreas">
+<meta name="citation_publication_date" content="2026">
+<meta name="citation_pdf_url" content="https://video-beats-motion.github.io/static/paper.pdf">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Video Models are Excellent Motion Models">
+<meta property="og:description" content="Lift the motion out of a generated video and it is more natural, and more faithful to the prompt, than what dedicated motion models produce.">
+<meta property="og:url" content="https://video-beats-motion.github.io/">
+<meta property="og:image" content="https://video-beats-motion.github.io/static/figures/og.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Video Models are Excellent Motion Models">
+<meta name="twitter:image" content="https://video-beats-motion.github.io/static/figures/og.jpg">
+
+<link rel="icon" href="static/favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#0A0F1E">
+
+<!-- Apply the stored (or system) theme before first paint. -->
+<script>
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem("v2m-theme"); } catch (e) {}
+    if (t !== "light" && t !== "dark")
+      t = window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", t);
+    document.documentElement.classList.add("js");
+  })();
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+<a class="skip" href="#overview">Skip to content</a>
+
+<!-- ================================ NAV ================================ -->
+<nav class="nav" id="nav">
+  <div class="wrap navrow">
+    <a class="brand" href="#top" aria-label="Back to top">
+      <span class="brand-mark">V2M</span>
+      <span class="brand-sub">Video Models are Excellent Motion Models</span>
+    </a>
+    <ul class="navlinks">
+      <li><a href="#overview">Video</a></li>
+      <li><a href="#abstract">Abstract</a></li>
+      <li><a href="#framework">Framework</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#evaluation">Evaluation</a></li>
+      <li><a href="#cite">Cite</a></li>
+    </ul>
+    <button class="themebtn" id="themeBtn" type="button" aria-label="Switch colour theme" title="Switch colour theme">
+      <svg class="i-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></svg>
+      <svg class="i-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 14.5A8.5 8.5 0 019.5 3.5a8.5 8.5 0 1011 11z"/></svg>
+    </button>
+  </div>
+  <div class="progress" id="progress"></div>
+</nav>
+
+<!-- =============================== HERO =============================== -->
+<header class="hero" id="top">
+  <!-- A tilted wall of real results (built by tools/build_assets.py). -->
+  <div class="wall" aria-hidden="true">
+    <video id="wallVideo" src="static/videos/wall.mp4" poster="static/videos/wall.jpg" muted loop playsinline autoplay preload="auto"></video>
+  </div>
+  <div class="veil" aria-hidden="true"></div>
+  <div class="glow g1" aria-hidden="true"></div>
+  <div class="glow g2" aria-hidden="true"></div>
+
+  <div class="wrap hero-inner">
+    <div class="pill rise">
+      <span class="pill-dot"></span>
+      <span>text</span><span class="pill-arrow">&rarr;</span><span>video</span><span class="pill-arrow">&rarr;</span><span>3D motion</span>
+    </div>
+
+    <h1 class="title rise">
+      Video Models are
+      <span class="title-em">Excellent</span>
+      Motion Models
+    </h1>
+
+    <p class="tagline rise">Generate a video, lift the person into 3D, and the motion comes out more natural,
+      and more faithful to the prompt, than what dedicated motion models produce, especially for
+      complex and compound actions.</p>
+
+    <div class="authors rise">
+      <span class="author"><a href="https://kianizadpanah.github.io" target="_blank" rel="noopener">Kian Izadpanah</a><sup>1,2,3</sup></span>
+      <span class="author"><a href="https://arash-mham.github.io/" target="_blank" rel="noopener">Ali Mahdavi Amiri</a><sup>3</sup></span>
+      <span class="author"><a href="https://danielcohenor.com/" target="_blank" rel="noopener">Daniel Cohen-Or</a><sup>4</sup></span>
+      <span class="author"><a href="https://www.cs.ucy.ac.cy/~yiorgos/" target="_blank" rel="noopener">Yiorgos Chrysanthou</a><sup>1,2</sup></span>
+      <span class="author"><a href="https://www.andreasaristidou.com/" target="_blank" rel="noopener">Andreas Aristidou</a><sup>1,2</sup></span>
+    </div>
+    <div class="affil rise">
+      <span><sup>1</sup>University of Cyprus</span>
+      <span><sup>2</sup>CYENS Centre of Excellence</span>
+      <span><sup>3</sup>Simon Fraser University</span>
+      <span><sup>4</sup>Tel Aviv University</span>
+    </div>
+
+    <nav class="links rise" aria-label="Paper resources">
+      <a class="btn primary" href="static/paper.pdf" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+        Paper
+      </a>
+      <!-- Swap this span for an <a class="btn" href="https://arxiv.org/abs/..."> once the preprint is public. -->
+      <span class="btn pending" aria-disabled="true" title="Coming soon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 5h16v2H4zM4 11h16v2H4zM4 17h11v2H4z"/></svg>
+        arXiv <span class="soon">soon</span>
+      </span>
+      <!-- Same for the code repository. -->
+      <span class="btn pending" aria-disabled="true" title="Coming soon">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        Code <span class="soon">soon</span>
+      </span>
+      <a class="btn" href="#results">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="M16 10l5-3v10l-5-3"/></svg>
+        Results
+      </a>
+      <a class="btn" href="#cite">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5H5.5A1.5 1.5 0 004 6.5V10a1.5 1.5 0 001.5 1.5H8V15c0 2-1.2 3.4-3 4"/><path d="M19 5h-2.5A1.5 1.5 0 0015 6.5V10a1.5 1.5 0 001.5 1.5H19V15c0 2-1.2 3.4-3 4"/></svg>
+        BibTeX
+      </a>
+    </nav>
+  </div>
+
+  <!-- ===== Overview video: directly after the title and authors ===== -->
+  <section class="wrap overview" id="overview" aria-label="Overview video">
+    <div class="player rise" id="teaser">
+      <video id="teaserVideo" preload="metadata" playsinline poster="static/videos/teaser-poster.jpg">
+        <source src="static/videos/teaser.mp4" type="video/mp4">
+      </video>
+      <button class="player-cover" id="teaserPlay" type="button" aria-label="Play the overview video with sound">
+        <span class="play-ring"><svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 001.5.86l10.5-6.5a1 1 0 000-1.72L9.5 4.64A1 1 0 008 5.5z"/></svg></span>
+        <span class="player-label">
+          <strong>Watch the overview</strong>
+          <span>4:58 &middot; narrated &middot; sound on</span>
+        </span>
+      </button>
+    </div>
+  </section>
+</header>
+
+<!-- ============================ HIGHLIGHTS ============================ -->
+<section class="highlights" aria-label="Key numbers">
+  <div class="wrap stats">
+    <div class="stat reveal">
+      <div class="stat-num"><span data-count="88">0</span><small>%</small></div>
+      <p>of human judgments found V2M <b>better aligned with the prompt</b> than Kimodo in prompt-only generation.</p>
+    </div>
+    <div class="stat reveal">
+      <div class="stat-num"><span data-count="86">0</span><small>%</small><span class="vs">vs <span data-count="38">0</span>%</span></div>
+      <p><b>action completion</b> for V2M vs. Kimodo: the video model performs every requested action far more often.</p>
+    </div>
+    <div class="stat reveal">
+      <div class="stat-num"><span data-count="72">0</span><small>%</small></div>
+      <p>of judgments preferred V2M for <b>motion naturalness</b> over a dedicated text-to-motion model.</p>
+    </div>
+    <div class="stat reveal">
+      <div class="stat-num"><span data-count="62.1" data-dec="1">0</span><small>%</small></div>
+      <p>VLM-judged wins on <b>complex prompts</b> when a video model enriches Kimodo&rsquo;s animation from just 5 keyframes.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= ABSTRACT ============================= -->
+<section id="abstract">
+  <div class="wrap">
+    <div class="eyebrow reveal">Abstract</div>
+    <div class="abstract-grid">
+      <div class="prose reveal">
+        <p class="lead">Video foundation models have emerged as powerful generators of dynamic visual content,
+          exhibiting remarkable capabilities in synthesizing complex actions and interactions. We argue that these
+          models have also become <em>excellent motion generators</em>, with motion priors that are richer and more
+          general than those learned by dedicated motion models.</p>
+        <p>Their advantage extends beyond visual realism and is manifested in two important aspects: <b>motion
+          naturalness</b>, including coherent body coordination, physical plausibility, and realistic interactions with
+          objects and the environment; and <b>motion scope</b>, encompassing a much broader range of activities and
+          semantic coherence, particularly uncommon, complex, and compound actions.</p>
+        <p>To investigate this position, we introduce a common evaluation framework that compares video and dedicated
+          motion models through three complementary settings: text-only motion generation, reconstruction of
+          video-generated motion from sparse keyframes, and video-based enrichment of motion-model outputs. By
+          converting all outputs into a shared 3D skeletal representation, we evaluate motion naturalness, semantic
+          alignment, action coverage, physical motion characteristics, and fidelity to motion constraints.</p>
+        <p>Our results suggest that video foundation models can generate more natural and semantically meaningful
+          movements, particularly for complex and compound actions. Moreover, we investigate motion-conditioned
+          generation through loose skeletal control, finding that dedicated motion models do not consistently improve
+          video-generated motion, while video models can enrich skeletal animations using sparse motion guidance. Our
+          findings suggest a shift in the role of specialized motion models, from generating complete animations to
+          guiding and controlling the richer motion capabilities already embedded in video foundation models.</p>
+      </div>
+      <aside class="why reveal" aria-labelledby="whyTitle">
+        <h3 id="whyTitle">Why would a video model know motion?</h3>
+        <p class="small">Hours of training data, drawn to scale. Skeletal motion datasets are expensive to capture;
+          video is abundant.</p>
+        <div class="hours" id="hours">
+          <div class="hrow" data-h="29"><span class="hname">HumanML3D</span><span class="hbar m"><i></i></span><span class="hval">~29 h</span></div>
+          <div class="hrow" data-h="144"><span class="hname">Motion-X</span><span class="hbar m"><i></i></span><span class="hval">~144 h</span></div>
+          <div class="hrow" data-h="700"><span class="hname">Kimodo mocap</span><span class="hbar m"><i></i></span><span class="hval">~700 h</span></div>
+          <div class="hrow" data-h="2000"><span class="hname">MotionMillion</span><span class="hbar m"><i></i></span><span class="hval">2,000+ h</span></div>
+          <div class="hrow" data-h="40000"><span class="hname">Open-Sora video</span><span class="hbar v"><i></i></span><span class="hval">~40,000 h</span></div>
+        </div>
+        <p class="tiny">As reported by each source. Video and skeletal data are not directly comparable; the gap in
+          scale and diversity is what motivates the question.</p>
+      </aside>
+    </div>
+
+    <figure class="fig hero-fig reveal">
+      <button class="zoomable" type="button" data-zoom="static/figures/teaser.webp" data-cap="Given the same text prompt, V2M generates a more complete and coordinated golf swing than a dedicated motion model." aria-label="Enlarge figure 1">
+        <img src="static/figures/teaser.webp" alt="A golf swing generated from the prompt 'A person does golf swings': top, video frames and the lifted V2M motion in blue; bottom, a dedicated motion model's result in orange." loading="lazy" decoding="async">
+      </button>
+      <figcaption><b>Same prompt, two kinds of model.</b> Given &ldquo;A person does golf swings&rdquo;, V2M generates a more
+        complete and coordinated swing than a dedicated motion model, illustrating the richer motion priors of video
+        foundation models.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============================= FRAMEWORK ============================ -->
+<section id="framework" class="band">
+  <div class="wrap">
+    <div class="eyebrow reveal">Comparison framework</div>
+    <h2 class="reveal">One prompt. Two kinds of model. One shared skeleton.</h2>
+    <p class="lede reveal">Video models output pixels and motion models output skeletons, so we bring both into the
+      same 22-joint SMPL representation. Video is lifted to 3D with GVHMR; motion models are rendered as-is. Three
+      complementary experiments then compare them. Pick one to see where it lives in the pipeline.</p>
+
+    <div class="fw-tabs reveal" role="tablist" aria-label="Highlight an experiment">
+      <button class="fw-tab active" role="tab" aria-selected="true" data-spot="all" type="button">Whole pipeline</button>
+      <button class="fw-tab" role="tab" aria-selected="false" data-spot="A" type="button"><span class="xl">A</span> Text-only</button>
+      <button class="fw-tab" role="tab" aria-selected="false" data-spot="B" type="button"><span class="xl">B</span> Video-to-Motion</button>
+      <button class="fw-tab" role="tab" aria-selected="false" data-spot="C" type="button"><span class="xl">C</span> Motion-to-Video</button>
+    </div>
+
+    <div class="fw reveal">
+      <div class="fw-figure" id="fwFigure">
+        <img src="static/figures/pipeline_merged.webp" alt="The comparison framework. A shared text prompt drives a video model (lifted to 3D) and a motion model; keyframes connect them in experiments B and C." loading="lazy" decoding="async">
+        <div class="spot" id="spot" aria-hidden="true"></div>
+        <button class="fw-zoom" type="button" data-zoom="static/figures/pipeline_merged.webp" data-cap="Comparison framework. A common text prompt is used across video and dedicated motion models, and all outputs are converted into the same 3D skeletal representation. Blue: video-model outputs. Orange: motion-model outputs. Pink: selected keyframes." aria-label="Enlarge the framework figure">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+        </button>
+      </div>
+      <div class="fw-text" id="fwText" aria-live="polite"></div>
+    </div>
+
+    <div class="hyps">
+      <article class="hyp reveal">
+        <span class="hyp-id">H1</span>
+        <h3>Motion range &amp; semantic alignment</h3>
+        <p>Video models can generate a broader range of meaningful activities: uncommon and complex movements,
+          simultaneous or sequential actions, and interactions with objects or the environment.</p>
+      </article>
+      <article class="hyp reveal">
+        <span class="hyp-id">H2</span>
+        <h3>Naturalness &amp; coherence</h3>
+        <p>Video models produce more natural, contextually appropriate movement: better body coordination, temporal
+          coherence and consistency with the intended action.</p>
+      </article>
+      <article class="hyp reveal">
+        <span class="hyp-id">H3</span>
+        <h3>Enrichment under sparse guidance</h3>
+        <p>Through <em>loose</em> skeletal control, a video model can enrich an existing animation with richer motion
+          while keeping the structure set by a handful of keyframes.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== RESULTS ============================= -->
+<section id="results">
+  <div class="wrap">
+    <div class="eyebrow reveal">Results</div>
+    <h2 class="reveal">See the motion for yourself.</h2>
+    <p class="lede reveal">Every clip renders all models on the same skeleton, beside the video the motion was
+      lifted from. Pick an experiment, then a prompt. Use <kbd>&larr;</kbd> <kbd>&rarr;</kbd> to step through clips and
+      <kbd>Space</kbd> to pause.</p>
+
+    <div class="xtabs reveal" role="tablist" aria-label="Choose an experiment" id="xtabs"></div>
+
+    <div class="explorer reveal" id="explorer">
+      <div class="x-info" id="xInfo"></div>
+
+      <div class="stage" id="stage">
+        <div class="stage-frame">
+          <video id="stageVideo" muted loop playsinline preload="auto"></video>
+          <div class="stage-loading" id="stageLoading" aria-hidden="true"><span></span></div>
+          <button class="stage-nav prev" id="stPrev" type="button" aria-label="Previous clip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <button class="stage-nav next" id="stNext" type="button" aria-label="Next clip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+        <div class="controls">
+          <button class="cbtn" id="cPlay" type="button" aria-label="Pause">
+            <svg class="i-pause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+            <svg class="i-play" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 001.5.86l10.5-6.5a1 1 0 000-1.72L9.5 4.64A1 1 0 008 5.5z"/></svg>
+          </button>
+          <div class="scrub" id="scrub" role="slider" tabindex="0" aria-label="Seek" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="scrub-fill" id="scrubFill"></div>
+            <div class="scrub-knob" id="scrubKnob"></div>
+          </div>
+          <span class="time" id="cTime">0:00</span>
+          <div class="speeds" role="group" aria-label="Playback speed">
+            <button type="button" data-rate="0.25">&frac14;&times;</button>
+            <button type="button" data-rate="0.5">&frac12;&times;</button>
+            <button type="button" data-rate="1" class="on">1&times;</button>
+          </div>
+          <button class="cbtn" id="cFull" type="button" aria-label="Full screen">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          </button>
+        </div>
+        <div class="stage-meta">
+          <span class="counter" id="stCount"></span>
+          <p class="stage-prompt" id="stPrompt"></p>
+          <span class="tags" id="stTags"></span>
+        </div>
+      </div>
+
+      <div class="rail" id="rail" role="listbox" aria-label="Clips"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ EVALUATION ============================ -->
+<section id="evaluation" class="band">
+  <div class="wrap">
+    <div class="eyebrow reveal">Evaluation</div>
+    <h2 class="reveal">People prefer the video model&rsquo;s motion.</h2>
+    <p class="lede reveal">We separate <em>whether the action was performed</em> from <em>how smooth the kinematics
+      are</em>: a motion model that barely moves can score low jerk without doing what was asked. So we combine a
+      human study, a VLM judge and kinematic metrics.</p>
+
+    <div class="etabs reveal" role="tablist" aria-label="Evaluation view" id="etabs">
+      <button class="etab active" role="tab" aria-selected="true" data-pane="human" type="button">Human study</button>
+      <button class="etab" role="tab" aria-selected="false" data-pane="vlm" type="button">VLM judge</button>
+      <button class="etab" role="tab" aria-selected="false" data-pane="metrics" type="button">Motion metrics</button>
+    </div>
+
+    <!-- Human study -->
+    <div class="epane active reveal" id="pane-human" role="tabpanel">
+      <div class="legend-wtl">
+        <span><i class="w"></i>V2M wins</span><span><i class="t"></i>Tie</span><span><i class="l"></i>Kimodo wins</span>
+      </div>
+      <div class="human-grid" id="humanGrid"></div>
+      <div class="completion">
+        <div class="comp-card">
+          <h3>Action completion</h3>
+          <p class="small">Did the animation perform every requested action?</p>
+          <div class="pairs" id="compBars"></div>
+        </div>
+        <div class="comp-card">
+          <h3>Order &amp; simultaneity</h3>
+          <p class="small">For compound prompts: are actions in the right order, or at the same time?</p>
+          <div class="pairs" id="orderBars"></div>
+        </div>
+      </div>
+      <p class="note">Online perceptual study, <b>43 participants</b>, pairwise V2M vs. Kimodo over 9, 8 and 9 animation
+        pairs in Exp. A, B and C. Win/tie/loss is from V2M&rsquo;s perspective.</p>
+    </div>
+
+    <!-- VLM judge -->
+    <div class="epane reveal" id="pane-vlm" role="tabpanel" hidden>
+      <div class="legend-wtl">
+        <span><i class="w"></i>V2M wins</span><span><i class="t"></i>Tie</span><span><i class="l"></i>Baseline wins</span>
+      </div>
+      <div class="vlm" id="vlmTable"></div>
+      <p class="note">Qwen3-VL-32B-Instruct compares anonymized motion pairs, in both presentation orders, for
+        alignment with the text and for naturalness. 65, 64 and 57 prompts in Exp. A, B and C. In B most judgments
+        are ties: dedicated motion models reconstruct V2M&rsquo;s keyframes without improving on its motion.</p>
+    </div>
+
+    <!-- Motion metrics -->
+    <div class="epane reveal" id="pane-metrics" role="tabpanel" hidden>
+      <div class="tablewrap">
+        <table class="metrics" id="metricsTable">
+          <thead>
+            <tr>
+              <th rowspan="2">Exp.</th><th rowspan="2">Method</th><th rowspan="2">Contact<br><small>%</small></th>
+              <th colspan="3" class="grp">Positional jerk <small>m/s&sup3; &darr;</small></th>
+              <th rowspan="2">Ang. RMS<br><small>&deg;/s&sup2; &darr;</small></th><th rowspan="2">Foot sliding<br><small>cm/s &darr;</small></th>
+            </tr>
+            <tr><th>Hands</th><th>Feet</th><th>Pelvis</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="note">Bold marks the lowest value per experiment. Contact coverage is descriptive. Kinematic metrics
+        are mixed, and dedicated models can score low errors through limited or idle movement, so these numbers are
+        read together with the semantic and perceptual results.</p>
+      <div class="kf">
+        <h3>Keyframe fidelity</h3>
+        <div class="kf-grid">
+          <div class="kf-card"><span class="kf-exp">B</span><div><b>Kimodo</b> in-betweening of V2M keyframes</div><dl><dt>MPJPE</dt><dd>3.04 cm</dd><dt>Joint rot.</dt><dd>15.39&deg;</dd><dt>Root rot.</dt><dd>2.25&deg;</dd></dl></div>
+          <div class="kf-card"><span class="kf-exp">B</span><div><b>CondMDI</b> in-betweening of V2M keyframes</div><dl><dt>MPJPE</dt><dd>12.17 cm</dd><dt>Joint rot.</dt><dd>10.75&deg;</dd><dt>Root rot.</dt><dd>4.03&deg;</dd></dl></div>
+          <div class="kf-card"><span class="kf-exp">C</span><div><b>V2M</b> guided by 2D projections of Kimodo keyframes</div><dl><dt>MPJPE</dt><dd>15.03 cm</dd><dt>PA-MPJPE</dt><dd>7.10 cm</dd><dt>Joint rot.</dt><dd>20.57&deg;</dd><dt>Root rot.</dt><dd>12.60&deg;</dd></dl></div>
+        </div>
+        <p class="note">Under loose control, lower keyframe error does not mean better motion: deviations can enrich the
+          in-between movement while keeping the intended action. In C, errors also include the depth ambiguity of 2D
+          guidance and the 3D reconstruction step.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================= TAKEAWAY ============================= -->
+<section id="takeaway">
+  <div class="wrap">
+    <blockquote class="big-quote reveal">
+      Animation is no longer primarily about generating motion from scratch, but about
+      <span class="grad">directing and shaping the rich motion knowledge</span> already embedded in video
+      foundation models.
+    </blockquote>
+    <div class="takeaways">
+      <div class="tk reveal">
+        <span class="tk-n">01</span>
+        <h3>Video models generate</h3>
+        <p>From text alone, lifted video motion wins on semantic alignment, naturalness and action coverage, most of all
+          for complex and compound prompts.</p>
+      </div>
+      <div class="tk reveal">
+        <span class="tk-n">02</span>
+        <h3>Motion models refine &amp; control</h3>
+        <p>Dedicated motion models don&rsquo;t consistently improve video-derived motion, but their animations make
+          excellent sparse guidance for a video model.</p>
+      </div>
+      <div class="tk reveal">
+        <span class="tk-n">03</span>
+        <h3>Open challenges</h3>
+        <p>Extracting accurate, editable 3D from video (fast motion, occlusion, inversion), more expressive loose
+          control, and moving beyond one person to interacting characters, objects and scenes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================== CITE =============================== -->
+<section id="cite" class="band">
+  <div class="wrap">
+    <div class="eyebrow reveal">Citation</div>
+    <h2 class="reveal">Find this useful? Cite us.</h2>
+    <div class="bib reveal">
+      <button id="copyBib" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>
+        <span>Copy</span>
+      </button>
+<!-- Update the entry (venue, arXiv id) once the paper is public. -->
+<pre id="bibtex">@article{izadpanah2026video,
+  title   = {Video Models are Excellent Motion Models},
+  author  = {Izadpanah, Kian and Mahdavi Amiri, Ali and Cohen-Or, Daniel
+             and Chrysanthou, Yiorgos and Aristidou, Andreas},
+  year    = {2026}
+}</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <p>&copy; 2026 the authors &middot; University of Cyprus &middot; CYENS Centre of Excellence &middot; Simon Fraser
+      University &middot; Tel Aviv University</p>
+    <p class="faint">V2M motion is reconstructed with GVHMR from videos generated by MiniMax-H3 and LTX-2.5.
+      Baselines: Kimodo, MotionGPT3, CondMDI.</p>
+  </div>
+</footer>
+
+<!-- ============================== LIGHTBOX ============================ -->
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lb-close" id="lbClose" type="button" aria-label="Close">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+  </button>
+  <figure class="lb-fig">
+    <img id="lbImg" alt="">
+    <figcaption id="lbCap"></figcaption>
+  </figure>
+</div>
+
+<script src="static/js/data.js"></script>
+<script src="static/js/app.js"></script>
+</body>
+</html>
