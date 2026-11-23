@@ -165,12 +165,16 @@ def build_results() -> dict:
             dur = duration(src)
             run(["ffmpeg", "-v", "error", "-y", "-ss", f"{dur * 0.42:.2f}", "-i", str(src),
                  "-frames:v", "1", "-vf", crop_filter(exp, 480, 300), "-q:v", "4", str(jpg)])
+            poster = out_dir / f"{slug}-poster.jpg"
+            run(["ffmpeg", "-v", "error", "-y", "-ss", f"{min(1.2, dur / 3):.2f}", "-i", str(src),
+                 "-frames:v", "1", "-vf", "scale=960:-2:flags=lanczos", "-q:v", "4", str(poster)])
             items.append({
                 "id": f"{exp}-{slug}",
                 "prompt": prompt,
                 "tags": tags,
                 "src": f"static/results/{exp}/{slug}.mp4",
                 "thumb": f"static/results/{exp}/{slug}.jpg",
+                "poster": f"static/results/{exp}/{slug}-poster.jpg",
                 "duration": round(dur, 2),
             })
             print(f"  {exp}/{slug}: {prompt}")

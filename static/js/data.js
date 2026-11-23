@@ -9,6 +9,7 @@ window.CLIPS = {
    ],
    "src": "static/results/A/a631.mp4",
    "thumb": "static/results/A/a631.jpg",
+   "poster": "static/results/A/a631-poster.jpg",
    "duration": 9.77
   },
   {
@@ -20,6 +21,7 @@ window.CLIPS = {
    ],
    "src": "static/results/A/a1416.mp4",
    "thumb": "static/results/A/a1416.jpg",
+   "poster": "static/results/A/a1416-poster.jpg",
    "duration": 5.13
   },
   {
@@ -31,6 +33,7 @@ window.CLIPS = {
    ],
    "src": "static/results/A/a518.mp4",
    "thumb": "static/results/A/a518.jpg",
+   "poster": "static/results/A/a518-poster.jpg",
    "duration": 5.13
   },
   {
@@ -41,6 +44,7 @@ window.CLIPS = {
    ],
    "src": "static/results/A/a1273.mp4",
    "thumb": "static/results/A/a1273.jpg",
+   "poster": "static/results/A/a1273-poster.jpg",
    "duration": 9.8
   },
   {
@@ -49,6 +53,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/A/a228.mp4",
    "thumb": "static/results/A/a228.jpg",
+   "poster": "static/results/A/a228-poster.jpg",
    "duration": 5.13
   },
   {
@@ -59,6 +64,7 @@ window.CLIPS = {
    ],
    "src": "static/results/A/a192.mp4",
    "thumb": "static/results/A/a192.jpg",
+   "poster": "static/results/A/a192-poster.jpg",
    "duration": 5.13
   },
   {
@@ -69,6 +75,7 @@ window.CLIPS = {
    ],
    "src": "static/results/A/a466.mp4",
    "thumb": "static/results/A/a466.jpg",
+   "poster": "static/results/A/a466-poster.jpg",
    "duration": 9.8
   },
   {
@@ -79,6 +86,7 @@ window.CLIPS = {
    ],
    "src": "static/results/A/a344.mp4",
    "thumb": "static/results/A/a344.jpg",
+   "poster": "static/results/A/a344-poster.jpg",
    "duration": 9.8
   },
   {
@@ -87,6 +95,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/A/a278.mp4",
    "thumb": "static/results/A/a278.jpg",
+   "poster": "static/results/A/a278-poster.jpg",
    "duration": 5.13
   },
   {
@@ -95,6 +104,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/A/a144.mp4",
    "thumb": "static/results/A/a144.jpg",
+   "poster": "static/results/A/a144-poster.jpg",
    "duration": 5.13
   },
   {
@@ -103,6 +113,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/A/a140.mp4",
    "thumb": "static/results/A/a140.jpg",
+   "poster": "static/results/A/a140-poster.jpg",
    "duration": 5.13
   },
   {
@@ -111,6 +122,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/A/a141.mp4",
    "thumb": "static/results/A/a141.jpg",
+   "poster": "static/results/A/a141-poster.jpg",
    "duration": 3.13
   },
   {
@@ -119,6 +131,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/A/a105.mp4",
    "thumb": "static/results/A/a105.jpg",
+   "poster": "static/results/A/a105-poster.jpg",
    "duration": 9.8
   },
   {
@@ -129,6 +142,7 @@ window.CLIPS = {
    ],
    "src": "static/results/A/u001.mp4",
    "thumb": "static/results/A/u001.jpg",
+   "poster": "static/results/A/u001-poster.jpg",
    "duration": 5.13
   }
  ],
@@ -141,6 +155,7 @@ window.CLIPS = {
    ],
    "src": "static/results/B/a616.mp4",
    "thumb": "static/results/B/a616.jpg",
+   "poster": "static/results/B/a616-poster.jpg",
    "duration": 9.8
   },
   {
@@ -151,6 +166,7 @@ window.CLIPS = {
    ],
    "src": "static/results/B/a698.mp4",
    "thumb": "static/results/B/a698.jpg",
+   "poster": "static/results/B/a698-poster.jpg",
    "duration": 9.8
   },
   {
@@ -159,6 +175,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/B/a138.mp4",
    "thumb": "static/results/B/a138.jpg",
+   "poster": "static/results/B/a138-poster.jpg",
    "duration": 9.8
   },
   {
@@ -169,6 +186,7 @@ window.CLIPS = {
    ],
    "src": "static/results/B/a163.mp4",
    "thumb": "static/results/B/a163.jpg",
+   "poster": "static/results/B/a163-poster.jpg",
    "duration": 9.8
   },
   {
@@ -179,6 +197,7 @@ window.CLIPS = {
    ],
    "src": "static/results/B/a163-k8.mp4",
    "thumb": "static/results/B/a163-k8.jpg",
+   "poster": "static/results/B/a163-k8-poster.jpg",
    "duration": 9.8
   },
   {
@@ -189,6 +208,7 @@ window.CLIPS = {
    ],
    "src": "static/results/B/a281.mp4",
    "thumb": "static/results/B/a281.jpg",
+   "poster": "static/results/B/a281-poster.jpg",
    "duration": 5.13
   },
   {
@@ -197,6 +217,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/B/a139.mp4",
    "thumb": "static/results/B/a139.jpg",
+   "poster": "static/results/B/a139-poster.jpg",
    "duration": 5.13
   },
   {
@@ -207,6 +228,7 @@ window.CLIPS = {
    ],
    "src": "static/results/B/a308.mp4",
    "thumb": "static/results/B/a308.jpg",
+   "poster": "static/results/B/a308-poster.jpg",
    "duration": 9.8
   },
   {
@@ -215,6 +237,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/B/a017.mp4",
    "thumb": "static/results/B/a017.jpg",
+   "poster": "static/results/B/a017-poster.jpg",
    "duration": 9.8
   },
   {
@@ -223,6 +246,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/B/a061.mp4",
    "thumb": "static/results/B/a061.jpg",
+   "poster": "static/results/B/a061-poster.jpg",
    "duration": 5.13
   },
   {
@@ -231,6 +255,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/B/a154.mp4",
    "thumb": "static/results/B/a154.jpg",
+   "poster": "static/results/B/a154-poster.jpg",
    "duration": 5.13
   },
   {
@@ -239,6 +264,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/B/a011.mp4",
    "thumb": "static/results/B/a011.jpg",
+   "poster": "static/results/B/a011-poster.jpg",
    "duration": 5.13
   }
  ],
@@ -249,6 +275,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/C/a142.mp4",
    "thumb": "static/results/C/a142.jpg",
+   "poster": "static/results/C/a142-poster.jpg",
    "duration": 10.0
   },
   {
@@ -257,6 +284,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/C/a143.mp4",
    "thumb": "static/results/C/a143.jpg",
+   "poster": "static/results/C/a143-poster.jpg",
    "duration": 10.0
   },
   {
@@ -267,6 +295,7 @@ window.CLIPS = {
    ],
    "src": "static/results/C/a115-k8.mp4",
    "thumb": "static/results/C/a115-k8.jpg",
+   "poster": "static/results/C/a115-k8-poster.jpg",
    "duration": 10.0
   },
   {
@@ -277,6 +306,7 @@ window.CLIPS = {
    ],
    "src": "static/results/C/a1343.mp4",
    "thumb": "static/results/C/a1343.jpg",
+   "poster": "static/results/C/a1343-poster.jpg",
    "duration": 10.0
   },
   {
@@ -287,6 +317,7 @@ window.CLIPS = {
    ],
    "src": "static/results/C/a500.mp4",
    "thumb": "static/results/C/a500.jpg",
+   "poster": "static/results/C/a500-poster.jpg",
    "duration": 10.0
   },
   {
@@ -297,6 +328,7 @@ window.CLIPS = {
    ],
    "src": "static/results/C/a577.mp4",
    "thumb": "static/results/C/a577.jpg",
+   "poster": "static/results/C/a577-poster.jpg",
    "duration": 10.0
   },
   {
@@ -307,6 +339,7 @@ window.CLIPS = {
    ],
    "src": "static/results/C/a632.mp4",
    "thumb": "static/results/C/a632.jpg",
+   "poster": "static/results/C/a632-poster.jpg",
    "duration": 5.13
   },
   {
@@ -317,6 +350,7 @@ window.CLIPS = {
    ],
    "src": "static/results/C/a899.mp4",
    "thumb": "static/results/C/a899.jpg",
+   "poster": "static/results/C/a899-poster.jpg",
    "duration": 5.13
   },
   {
@@ -325,6 +359,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/C/a269.mp4",
    "thumb": "static/results/C/a269.jpg",
+   "poster": "static/results/C/a269-poster.jpg",
    "duration": 5.13
   },
   {
@@ -333,6 +368,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/C/a163.mp4",
    "thumb": "static/results/C/a163.jpg",
+   "poster": "static/results/C/a163-poster.jpg",
    "duration": 10.0
   },
   {
@@ -341,6 +377,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/C/a061.mp4",
    "thumb": "static/results/C/a061.jpg",
+   "poster": "static/results/C/a061-poster.jpg",
    "duration": 10.0
   },
   {
@@ -349,6 +386,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/C/a017.mp4",
    "thumb": "static/results/C/a017.jpg",
+   "poster": "static/results/C/a017-poster.jpg",
    "duration": 5.13
   },
   {
@@ -357,6 +395,7 @@ window.CLIPS = {
    "tags": [],
    "src": "static/results/C/a011.mp4",
    "thumb": "static/results/C/a011.jpg",
+   "poster": "static/results/C/a011-poster.jpg",
    "duration": 5.13
   }
  ],
@@ -369,6 +408,7 @@ window.CLIPS = {
    ],
    "src": "static/results/D/a249.mp4",
    "thumb": "static/results/D/a249.jpg",
+   "poster": "static/results/D/a249-poster.jpg",
    "duration": 5.13
   },
   {
@@ -379,6 +419,7 @@ window.CLIPS = {
    ],
    "src": "static/results/D/a252.mp4",
    "thumb": "static/results/D/a252.jpg",
+   "poster": "static/results/D/a252-poster.jpg",
    "duration": 5.13
   }
  ]

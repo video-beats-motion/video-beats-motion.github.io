@@ -13,6 +13,7 @@
     return n;
   };
   var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var play = function (v) { var p = v.play(); if (p) p.catch(function () {}); };
 
   /* ------------------------------------------------------------ theme */
   var root = document.documentElement;
@@ -53,15 +54,15 @@
       e.target.classList.add("in");
       revealIO.unobserve(e.target);
     });
-  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
-  $$(".reveal").forEach(function (n) {
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.06 });
+  function observeReveal(n) {
     var sibs = $$(":scope > .reveal", n.parentElement);
     var i = sibs.indexOf(n);
     if (i > 0) n.style.transitionDelay = Math.min(i, 6) * 70 + "ms";
     revealIO.observe(n);
-  });
+  }
+  $$(".reveal").forEach(observeReveal);
 
-  /* Run fn once when node is (mostly) on screen. */
   function whenSeen(node, fn, threshold) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) { if (e.isIntersecting) { io.disconnect(); fn(); } });
@@ -84,24 +85,13 @@
     }, 0.6);
   });
 
-  /* --------------------------------------------------------- hours chart */
-  var hours = $("#hours");
-  if (hours) whenSeen(hours, function () {
-    var rows = $$(".hrow", hours), max = 40000;
-    rows.forEach(function (r, i) {
-      setTimeout(function () { $("i", r).style.width = (parseFloat(r.dataset.h) / max * 100) + "%"; }, i * 140);
-    });
-  });
-
   /* ------------------------------------------------------- hero wall video */
   var wall = $("#wallVideo");
   if (wall) {
     if (reduceMotion) { wall.removeAttribute("autoplay"); wall.pause(); }
-    else {
-      new IntersectionObserver(function (es) {
-        es.forEach(function (e) { if (e.isIntersecting) { var p = wall.play(); if (p) p.catch(function () {}); } else wall.pause(); });
-      }).observe(wall);
-    }
+    else new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) play(wall); else wall.pause(); });
+    }).observe(wall);
   }
 
   /* ----------------------------------------------------- overview player */
@@ -110,30 +100,56 @@
     tv.controls = true;
     teaser.classList.add("playing");
     tv.muted = false;
-    var p = tv.play(); if (p) p.catch(function () {});
+    play(tv);
   });
 
-  /* -------------------------------------------------------------- lightbox */
-  var lb = $("#lightbox"), lbImg = $("#lbImg"), lbCap = $("#lbCap"), lastFocus = null;
-  function openLightbox(src, cap) {
-    lastFocus = document.activeElement;
-    lbImg.src = src; lbImg.alt = cap || "";
-    lbCap.textContent = cap || "";
+  /* -------------------------------------------------------------- lightbox
+     Shows a figure (image) or a result clip (video, with prev/next). */
+  var lb = $("#lightbox"), lbImg = $("#lbImg"), lbVid = $("#lbVid"), lbCap = $("#lbCap");
+  var lbPrev = $("#lbPrev"), lbNext = $("#lbNext"), lastFocus = null, lbList = null, lbIdx = 0;
+  function openLightbox() {
+    if (lb.hidden) lastFocus = document.activeElement;
     lb.hidden = false;
     document.body.style.overflow = "hidden";
     $("#lbClose").focus();
   }
+  function showImage(src, cap) {
+    lbList = null;
+    lbVid.pause(); lbVid.hidden = true; lbVid.removeAttribute("src");
+    lbImg.hidden = false; lbImg.src = src; lbImg.alt = cap || "";
+    lbCap.textContent = cap || "";
+    lbPrev.hidden = lbNext.hidden = true;
+    openLightbox();
+  }
+  function showClip(list, i) {
+    lbList = list; lbIdx = (i + list.length) % list.length;
+    var c = list[lbIdx];
+    lbImg.hidden = true;
+    lbVid.hidden = false; lbVid.muted = true; lbVid.src = c.src; play(lbVid);
+    lbCap.textContent = c.prompt;
+    lbPrev.hidden = lbNext.hidden = list.length < 2;
+    openLightbox();
+  }
   function closeLightbox() {
     lb.hidden = true;
+    lbVid.pause(); lbVid.removeAttribute("src"); lbVid.load();
     document.body.style.overflow = "";
     if (lastFocus) lastFocus.focus();
   }
   document.addEventListener("click", function (e) {
     var z = e.target.closest("[data-zoom]");
-    if (z) { e.preventDefault(); openLightbox(z.getAttribute("data-zoom"), z.getAttribute("data-cap")); }
+    if (z) { e.preventDefault(); showImage(z.getAttribute("data-zoom"), z.getAttribute("data-cap")); }
   });
   $("#lbClose").addEventListener("click", closeLightbox);
+  lbPrev.addEventListener("click", function () { showClip(lbList, lbIdx - 1); });
+  lbNext.addEventListener("click", function () { showClip(lbList, lbIdx + 1); });
   lb.addEventListener("click", function (e) { if (e.target === lb || e.target.classList.contains("lb-fig")) closeLightbox(); });
+  document.addEventListener("keydown", function (e) {
+    if (lb.hidden) return;
+    if (e.key === "Escape") closeLightbox();
+    else if (lbList && e.key === "ArrowRight") showClip(lbList, lbIdx + 1);
+    else if (lbList && e.key === "ArrowLeft") showClip(lbList, lbIdx - 1);
+  });
 
   /* ----------------------------------------------- framework spotlight */
   var SPOTS = {
@@ -143,18 +159,10 @@
     C: [52.2, 36.2, 47.4, 63.4]
   };
   var FW_TEXT = {
-    all: { L: "&#8734;", t: "Three settings, one shared representation",
-      p: "A common text prompt drives a video model and a dedicated motion model. Every output becomes a 22-joint SMPL skeleton before evaluation. Blue marks video-model outputs, orange motion-model outputs, pink the selected keyframes.",
-      cmp: "" },
-    A: { L: "A", t: "Text-only generation",
-      p: "Both families generate from the same prompt with no skeletal guidance: a direct test of motion range and naturalness (H1, H2).",
-      cmp: '<span class="num v">1</span> vs <span class="num m">3</span>' },
-    B: { L: "B", t: "Video-to-Motion",
-      p: "K = 5 keyframes are taken from the lifted video motion and Kimodo or CondMDI in-betweens them. Can a dedicated motion model improve video-generated motion? (H2, H3)",
-      cmp: '<span class="num v">1</span> vs <span class="num m">2</span>' },
-    C: { L: "C", t: "Motion-to-Video",
-      p: "K = 5 keyframes from a motion-model animation, projected to 2D, loosely guide the video model; the video is lifted back to 3D. Can a video model enrich a skeletal animation? (H2, H3)",
-      cmp: '<span class="num m">3</span> vs <span class="num v">4</span>' }
+    all: '<span class="c-v">Video model</span> &middot; <span class="c-m">Motion model</span> &middot; <span class="c-k">Keyframes</span> &rarr; one 22-joint skeleton',
+    A: '<b>A</b> &nbsp;Text only, no guidance &nbsp; <span class="num v">1</span> vs <span class="num m">3</span>',
+    B: '<b>B</b> &nbsp;Motion model in-betweens V2M keyframes &nbsp; <span class="num v">1</span> vs <span class="num m">2</span>',
+    C: '<b>C</b> &nbsp;Video model enriches motion-model keyframes &nbsp; <span class="num m">3</span> vs <span class="num v">4</span>'
   };
   var fwFig = $("#fwFigure"), spot = $("#spot"), fwText = $("#fwText"), fwKey = "all";
   function placeSpot() {
@@ -174,9 +182,7 @@
       b.classList.toggle("active", on);
       b.setAttribute("aria-selected", on ? "true" : "false");
     });
-    var d = FW_TEXT[key];
-    fwText.innerHTML = '<span class="big-letter">' + d.L + "</span><div><h3>" + d.t + "</h3><p>" + d.p + "</p></div>" +
-      (d.cmp ? '<span class="cmp">' + d.cmp + "</span>" : "<span></span>");
+    fwText.innerHTML = FW_TEXT[key];
     fwText.classList.remove("swap"); void fwText.offsetWidth; fwText.classList.add("swap");
     placeSpot();
   }
@@ -186,225 +192,77 @@
   if (fwImg.complete) placeSpot(); else fwImg.addEventListener("load", placeSpot);
   addEventListener("resize", placeSpot);
 
-  /* ------------------------------------------------------ results explorer */
+  /* ------------------------------------------------------- results gallery
+     One tab per experiment; each shows a grid of looping clips. A clip only
+     downloads when it nears the viewport and only plays while visible. */
   var EXPS = [
-    { key: "A", title: "Text-only", sub: "prompt → motion",
-      head: "A · Text-only generation",
-      desc: "Each model receives only the text prompt. V2M generates a video with a video foundation model and lifts the person into 3D; Kimodo and MotionGPT3 generate skeletal motion directly. Watch the compound prompts: the video model keeps every action going at once.",
-      legend: [["V2M (ours)", "--v2m", 1], ["Kimodo", "--kimodo"], ["MotionGPT3", "--mgpt"]],
-      figs: [
-        ["Paper figure", "static/figures/experimentsA_results.webp", "Experiment A: prompt-only generation. Sweeping highlights coordinated arm and body movements, while tennis illustrates racket-swing execution. Walking while talking and holding a coffee evaluates action coverage in compound movements. V2M produces more natural, complete, and semantically coherent motions that better align with the text prompt."],
-        ["Compound actions", "static/figures/compound_generation.webp", "Compound prompt: V2M combines walking, talking on the phone and carrying a coffee, whereas dedicated motion models struggle to reproduce all of the actions."]
-      ] },
-    { key: "B", title: "Video-to-Motion", sub: "motion model in-betweens",
-      head: "B · Video-to-Motion",
-      desc: "We take K = 5 keyframes (8 where marked; pink, on the timeline) from V2M's own motion and ask Kimodo and CondMDI to fill in the frames between. Can a dedicated motion model improve on video-derived motion? Mostly it ties, and it sometimes loses part of the action.",
-      legend: [["V2M (ours)", "--v2m", 1], ["Kimodo in-betweening", "--kimodo"], ["CondMDI in-betweening", "--condmdi"], ["Keyframe pose", "--key"]],
-      figs: [["Paper figure", "static/figures/experimentsB_results.webp", "Experiment B: video-to-motion. Lunge-and-punch tests simultaneous movements, while turn-then-wave examines action ordering. Dedicated motion models generate intermediate movements without consistently improving the original video-derived animation, and may fail to reproduce its complete semantic content."]] },
-    { key: "C", title: "Motion-to-Video", sub: "video model enriches",
-      head: "C · Motion-to-Video",
-      desc: "Kimodo animates the prompt; K = 5 of its keyframes (8 where marked), projected to 2D skeletons, loosely guide the video model (the Skeletal Control panel stays blank between keyframes). Lifted back to 3D, the motion keeps the intended structure but becomes richer and more complete.",
-      legend: [["V2M (ours)", "--v2m", 1], ["Kimodo (input motion)", "--kimodo"], ["Keyframe pose", "--key"]],
-      figs: [["Paper figure", "static/figures/experimentsC_results.webp", "Experiment C: motion-to-video. V2M generates more complete and semantically meaningful movements, both in jumping rope and kicking a soccer ball, illustrating the potential of video models to enrich skeletal animations under loose control."]] },
-    { key: "D", title: "Failure cases", sub: "where lifting breaks", fail: true,
-      head: "D · Failure cases",
-      desc: "Acrobatic, inverted motions remain hard. The generated videos show the action, but monocular 3D reconstruction struggles with fast, upside-down, self-occluding poses: the lifted body can tilt, sink into the floor or lose the action. Better video-to-3D lifting is one of the open challenges.",
-      legend: [["V2M (ours)", "--v2m", 1], ["Kimodo", "--kimodo"], ["MotionGPT3", "--mgpt"]],
-      figs: [] }
+    { key: "A", title: "Text-only", desc: "Same prompt, no guidance.",
+      legend: [["V2M (ours)", "--v2m", 1], ["Kimodo", "--kimodo"], ["MotionGPT3", "--mgpt"]] },
+    { key: "B", title: "Video-to-Motion", desc: "Motion models in-between keyframes taken from V2M.",
+      legend: [["V2M (ours)", "--v2m", 1], ["Kimodo", "--kimodo"], ["CondMDI", "--condmdi"], ["Keyframes", "--key"]] },
+    { key: "C", title: "Motion-to-Video", desc: "Kimodo keyframes loosely guide the video model.",
+      legend: [["V2M (ours)", "--v2m", 1], ["Kimodo (input)", "--kimodo"], ["Keyframes", "--key"]] },
+    { key: "D", title: "Failure cases", fail: true, desc: "The video is right; lifting inverted poses to 3D fails.",
+      legend: [["V2M (ours)", "--v2m", 1], ["Kimodo", "--kimodo"], ["MotionGPT3", "--mgpt"]] }
   ];
   var CLIPS = window.CLIPS || {};
-  var xtabs = $("#xtabs"), xInfo = $("#xInfo"), rail = $("#rail"), explorer = $("#explorer");
-  var sv = $("#stageVideo"), stage = $("#stage"), loading = $("#stageLoading");
-  var cPlay = $("#cPlay"), scrub = $("#scrub"), fill = $("#scrubFill"), knob = $("#scrubKnob"), cTime = $("#cTime");
-  var state = { exp: null, idx: 0, userPaused: false, visible: false, rate: 1 };
+  var gtabs = $("#gtabs"), gallery = $("#gallery"), gdesc = $("#gdesc"), glegend = $("#glegend");
 
-  function tagHtml(t) {
-    var cls = /^K =/.test(t) ? "tag k" : (/Acrobatic|Inverted/.test(t) ? "tag f" : "tag");
-    return '<span class="' + cls + '">' + esc(t) + "</span>";
-  }
-  function fmt(s) { s = Math.max(0, s || 0); return Math.floor(s / 60) + ":" + ("0" + Math.floor(s % 60)).slice(-2); }
+  var loadIO = new IntersectionObserver(function (es) {
+    es.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var v = e.target;
+      if (!v.src && v.dataset.src) { v.src = v.dataset.src; }
+      loadIO.unobserve(v);
+    });
+  }, { rootMargin: "300px 0px" });
+  var playIO = new IntersectionObserver(function (es) {
+    es.forEach(function (e) {
+      var v = e.target;
+      if (e.isIntersecting && !reduceMotion) { if (!v.src) v.src = v.dataset.src; play(v); }
+      else v.pause();
+    });
+  }, { threshold: 0.35 });
 
   EXPS.forEach(function (x) {
-    var n = (CLIPS[x.key] || []).length;
-    var b = el("button", "xtab" + (x.fail ? " fail" : ""));
+    var b = el("button", "gtab" + (x.fail ? " fail" : ""));
     b.type = "button"; b.setAttribute("role", "tab"); b.dataset.exp = x.key;
-    b.innerHTML = '<span class="xl">' + x.key + '</span><span class="xt">' + x.title + '</span><span class="xs">' + n + " clips · " + x.sub + "</span>";
-    b.addEventListener("click", function () { selectExp(x.key, 0); });
-    xtabs.appendChild(b);
+    b.innerHTML = '<span class="xl">' + (x.fail ? "!" : x.key) + "</span>" + x.title +
+      '<span class="cnt">' + (CLIPS[x.key] || []).length + "</span>";
+    b.addEventListener("click", function () { showExp(x.key); });
+    gtabs.appendChild(b);
   });
 
-  function selectExp(key, idx) {
-    if (state.exp === key) { selectClip(idx); return; }
-    state.exp = key;
+  function showExp(key) {
     var x = EXPS.filter(function (e) { return e.key === key; })[0];
-    $$(".xtab", xtabs).forEach(function (b) {
+    var list = CLIPS[key] || [];
+    $$(".gtab", gtabs).forEach(function (b) {
       var on = b.dataset.exp === key;
       b.classList.toggle("active", on); b.setAttribute("aria-selected", on ? "true" : "false");
     });
-    var legend = x.legend.map(function (l) {
+    gdesc.textContent = x.desc;
+    glegend.innerHTML = x.legend.map(function (l) {
       return '<span class="chip' + (l[2] ? " ours" : "") + '" style="--c:var(' + l[1] + ')"><i></i>' + esc(l[0]) + "</span>";
     }).join("");
-    var figs = x.figs.map(function (f) {
-      return '<button class="figbtn" type="button" data-zoom="' + f[1] + '" data-cap="' + esc(f[2]) + '">' +
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>' +
-        esc(f[0]) + "</button>";
-    }).join("");
-    xInfo.innerHTML = "<div><h3>" + esc(x.head) + "</h3><p>" + esc(x.desc) + '</p></div><div class="x-side"><div class="legend">' + legend + "</div>" +
-      (figs ? '<div class="figbtns">' + figs + "</div>" : "") + "</div>";
-    xInfo.classList.remove("swap"); void xInfo.offsetWidth; xInfo.classList.add("swap");
 
-    rail.innerHTML = "";
-    (CLIPS[key] || []).forEach(function (c, i) {
-      var card = el("button", "card");
-      card.type = "button"; card.setAttribute("role", "option");
-      card.innerHTML = '<span class="thumb"><img src="' + c.thumb + '" alt="" loading="lazy" decoding="async"><span class="eq"><i></i><i></i><i></i></span></span>' +
-        '<span class="card-text"><span class="card-prompt">' + esc(c.prompt) + "</span>" +
-        (c.tags.length ? '<span class="tags">' + c.tags.map(tagHtml).join("") + "</span>" : "") + "</span>";
-      card.addEventListener("click", function () { state.userPaused = false; selectClip(i); });
-      attachPreview(card, c);
-      rail.appendChild(card);
+    $$("video", gallery).forEach(function (v) { playIO.unobserve(v); loadIO.unobserve(v); v.pause(); v.removeAttribute("src"); v.load(); });
+    gallery.innerHTML = "";
+    gallery.classList.toggle("few", list.length < 3);
+    list.forEach(function (c, i) {
+      var tile = el("button", "tile");
+      tile.type = "button";
+      tile.setAttribute("aria-label", "Enlarge: " + c.prompt);
+      tile.style.setProperty("--d", (i % 6) * 60 + "ms");
+      tile.innerHTML = '<video muted loop playsinline preload="none" poster="' + c.poster + '" data-src="' + c.src + '"></video>' +
+        '<span class="tile-zoom" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>';
+      tile.addEventListener("click", function () { showClip(list, i); });
+      gallery.appendChild(tile);
+      var v = $("video", tile);
+      loadIO.observe(v); playIO.observe(v);
     });
-    selectClip(idx || 0);
+    requestAnimationFrame(function () { gallery.classList.remove("enter"); void gallery.offsetWidth; gallery.classList.add("enter"); });
   }
-
-  function selectClip(i) {
-    var list = CLIPS[state.exp] || [];
-    if (!list.length) return;
-    state.idx = (i + list.length) % list.length;
-    var c = list[state.idx];
-    $$(".card", rail).forEach(function (n, k) {
-      var on = k === state.idx;
-      n.classList.toggle("active", on); n.setAttribute("aria-selected", on ? "true" : "false");
-    });
-    loading.classList.add("on");
-    sv.src = c.src;
-    sv.defaultPlaybackRate = state.rate;
-    sv.playbackRate = state.rate;
-    $("#stCount").textContent = ("0" + (state.idx + 1)).slice(-2) + " / " + ("0" + list.length).slice(-2);
-    $("#stPrompt").textContent = "“" + c.prompt.replace(/\.$/, "") + "”";
-    $("#stTags").innerHTML = c.tags.map(tagHtml).join("");
-    scrollCardIntoView();
-    syncPlay();
-  }
-
-  function scrollCardIntoView() {
-    var card = $$(".card", rail)[state.idx];
-    if (!card) return;
-    var horizontal = getComputedStyle(rail).flexDirection === "row";
-    if (horizontal) {
-      var left = card.offsetLeft - rail.offsetLeft - (rail.clientWidth - card.offsetWidth) / 2;
-      rail.scrollTo({ left: left, behavior: reduceMotion ? "auto" : "smooth" });
-    } else {
-      var top = card.offsetTop - rail.offsetTop - (rail.clientHeight - card.offsetHeight) / 2;
-      rail.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
-    }
-  }
-
-  function syncPlay() {
-    if (state.visible && !state.userPaused) { var p = sv.play(); if (p) p.catch(function () {}); }
-    else sv.pause();
-  }
-  sv.addEventListener("canplay", function () { loading.classList.remove("on"); });
-  sv.addEventListener("waiting", function () { loading.classList.add("on"); });
-  sv.addEventListener("playing", function () { loading.classList.remove("on"); });
-  sv.addEventListener("play", function () { cPlay.classList.remove("paused"); cPlay.setAttribute("aria-label", "Pause"); });
-  sv.addEventListener("pause", function () { cPlay.classList.add("paused"); cPlay.setAttribute("aria-label", "Play"); });
-
-  new IntersectionObserver(function (es) {
-    es.forEach(function (e) { state.visible = e.isIntersecting; syncPlay(); });
-  }, { threshold: 0.25 }).observe(stage);
-
-  cPlay.addEventListener("click", togglePlay);
-  sv.addEventListener("click", togglePlay);
-  function togglePlay() {
-    if (sv.paused) { state.userPaused = false; state.visible = true; syncPlay(); }
-    else { state.userPaused = true; sv.pause(); }
-  }
-  $("#stPrev").addEventListener("click", function () { selectClip(state.idx - 1); });
-  $("#stNext").addEventListener("click", function () { selectClip(state.idx + 1); });
-
-  $$(".speeds button").forEach(function (b) {
-    b.addEventListener("click", function () {
-      state.rate = parseFloat(b.dataset.rate);
-      sv.defaultPlaybackRate = state.rate; sv.playbackRate = state.rate;
-      $$(".speeds button").forEach(function (o) { o.classList.toggle("on", o === b); });
-    });
-  });
-
-  $("#cFull").addEventListener("click", function () {
-    var f = $(".stage-frame");
-    if (document.fullscreenElement) document.exitFullscreen();
-    else if (f.requestFullscreen) f.requestFullscreen();
-    else if (sv.webkitEnterFullscreen) sv.webkitEnterFullscreen();
-  });
-
-  // progress / scrubbing
-  (function tick() {
-    if (sv.duration) {
-      var p = sv.currentTime / sv.duration * 100;
-      fill.style.width = p + "%"; knob.style.left = p + "%";
-      scrub.setAttribute("aria-valuenow", Math.round(p));
-      cTime.textContent = fmt(sv.currentTime) + " / " + fmt(sv.duration);
-    }
-    requestAnimationFrame(tick);
-  })();
-  var dragging = false;
-  function seekFrom(e) {
-    var r = scrub.getBoundingClientRect();
-    var p = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    if (sv.duration) sv.currentTime = p * sv.duration;
-  }
-  scrub.addEventListener("pointerdown", function (e) { dragging = true; scrub.setPointerCapture(e.pointerId); seekFrom(e); });
-  scrub.addEventListener("pointermove", function (e) { if (dragging) seekFrom(e); });
-  scrub.addEventListener("pointerup", function () { dragging = false; });
-  scrub.addEventListener("keydown", function (e) {
-    if (!sv.duration) return;
-    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
-      e.preventDefault(); e.stopPropagation();
-      sv.currentTime = Math.min(sv.duration, Math.max(0, sv.currentTime + (e.key === "ArrowLeft" ? -0.5 : 0.5)));
-    }
-  });
-
-  // keyboard: arrows step clips, space toggles, while the explorer is on screen
-  document.addEventListener("keydown", function (e) {
-    if (!lb.hidden) { if (e.key === "Escape") closeLightbox(); return; }
-    if (!state.visible || e.altKey || e.ctrlKey || e.metaKey) return;
-    var t = e.target, tag = t && t.tagName;
-    if (tag === "INPUT" || tag === "TEXTAREA" || (t && t.isContentEditable)) return;
-    if (e.key === "ArrowRight") { e.preventDefault(); selectClip(state.idx + 1); }
-    else if (e.key === "ArrowLeft") { e.preventDefault(); selectClip(state.idx - 1); }
-    else if (e.key === " " && tag !== "BUTTON") { e.preventDefault(); togglePlay(); }
-  });
-
-  // hover preview on thumbnails (mouse only)
-  var finePointer = window.matchMedia && matchMedia("(hover: hover) and (pointer: fine)").matches;
-  function attachPreview(card, c) {
-    if (!finePointer || reduceMotion) return;
-    var timer = null, v = null;
-    card.addEventListener("mouseenter", function () {
-      timer = setTimeout(function () {
-        if (card.classList.contains("active")) return;
-        v = document.createElement("video");
-        v.muted = true; v.loop = true; v.playsInline = true; v.src = c.src;
-        v.style.objectFit = "cover";
-        $(".thumb", card).appendChild(v);
-        var p = v.play(); if (p) p.catch(function () {});
-      }, 260);
-    });
-    card.addEventListener("mouseleave", function () {
-      clearTimeout(timer);
-      if (v) { v.pause(); v.removeAttribute("src"); v.load(); v.remove(); v = null; }
-    });
-  }
-
-  // keep the rail as tall as the stage on wide screens
-  if (window.ResizeObserver) {
-    new ResizeObserver(function () {
-      rail.style.maxHeight = getComputedStyle(rail).flexDirection === "row" ? "" : stage.offsetHeight + "px";
-    }).observe(stage);
-  }
-
-  selectExp("A", 0);
+  showExp("A");
 
   /* ------------------------------------------------------------ evaluation */
   var HUMAN = [
@@ -450,7 +308,7 @@
     var card = el("div", "hcard");
     card.innerHTML = '<div class="hcard-head"><span class="xl">' + h.x + "</span><span>" + h.name + "</span></div>" +
       h.rows.map(function (r) {
-        return '<div class="metric"><div class="metric-label"><span>' + r[0] + "</span><b>" + r[1] + "% win</b></div>" + wtlBar(r.slice(1)) + "</div>";
+        return '<div class="metric"><div class="metric-label"><span>' + r[0] + "</span><b>" + r[1] + "%</b></div>" + wtlBar(r.slice(1)) + "</div>";
       }).join("");
     hg.appendChild(card);
   });
@@ -476,7 +334,7 @@
     var rows = grp[1];
     var mins = [1, 2, 3, 4, 5].map(function (c) { return Math.min.apply(null, rows.map(function (r) { return r[2][c]; })); });
     rows.forEach(function (r, i) {
-      var tr = el("tr", (i === 0 ? "first " : "") + (i === 0 ? "ours" : ""));
+      var tr = el("tr", i === 0 ? "first ours" : "");
       tr.innerHTML = '<td class="exp">' + (i === 0 ? grp[0] : "") + '</td><td><span class="method-dot" style="--c:var(' + r[1] + ')"></span>' + r[0] + "</td>" +
         r[2].map(function (v, c) {
           var s = v.toFixed(2);
